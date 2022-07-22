@@ -125,11 +125,27 @@ app.get('/statement/date', verifyExistsAccountCPF, (request, response) => {
     const statement = customer.statement.filter( // um filtro para retornar somente o extrato bancario do dia que passar
         // transformar a data em 10/10/2021 por exemplo
         (statement) =>
-        statement.created_at.toDateString() ===
-        new Date(dateFormat).toDateString()
+            statement.created_at.toDateString() ===
+            new Date(dateFormat).toDateString()
     );
 
     return response.json(statement);
+});
+
+// atualizar os dados do cliente
+app.put('/account', verifyExistsAccountCPF, (request, response) => {
+    const { name } = request.body;
+    const { customer } = request;
+
+    customer.name = name;
+
+    return response.status(201).send();
+});
+
+// obter dados da conta
+app.get('/account', verifyExistsAccountCPF, (request, response) => {
+    const { customer } = request;
+    return response.json(customer);
 });
 
 app.listen(3333, () => {
