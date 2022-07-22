@@ -39,9 +39,9 @@ function getBalance(statement) {
     // acumulador e objeto
     const balance = statement.reduce((acc, operation) => {// vai pegar as informações de determinado valor e vai transformar em um valor somente
         // se for crédito vai somar, e se for depito subtrair
-        if(operation.type === 'credit'){
+        if (operation.type === 'credit') {
             return acc + operation.amount;
-        }else{
+        } else {
             return acc - operation.amount;
         }
     }, 0); // vai iniciar ele em 0
@@ -100,8 +100,8 @@ app.post('/withdraw', verifyExistsAccountCPF, (request, response) => {
     const { customer } = request;
 
     const balance = getBalance(customer.statement);
-    if(balance < amount){
-        response.status(400).json({error: 'Insufficient funds!'});
+    if (balance < amount) {
+        response.status(400).json({ error: 'Insufficient funds!' });
     }
 
     const statementOperation = {
@@ -113,6 +113,23 @@ app.post('/withdraw', verifyExistsAccountCPF, (request, response) => {
     customer.statement.push(statementOperation);
     return response.status(201).send();
 
+});
+
+// a partir da data que for definida
+app.get('/statement/date', verifyExistsAccountCPF, (request, response) => {
+    const { customer } = request; // informação dentro do request
+    const { date } = request.query;
+
+    const dateFormat = new Date(date + " 00:00"); // pegar date e em qualquer horário
+
+    const statement = customer.statement.filter( // um filtro para retornar somente o extrato bancario do dia que passar
+        // transformar a data em 10/10/2021 por exemplo
+        (statement) =>
+        statement.created_at.toDateString() ===
+        new Date(dateFormat).toDateString()
+    );
+
+    return response.json(statement);
 });
 
 app.listen(3333, () => {
