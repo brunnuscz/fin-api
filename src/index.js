@@ -148,6 +148,22 @@ app.get('/account', verifyExistsAccountCPF, (request, response) => {
     return response.json(customer);
 });
 
+// deletar conta
+app.delete('/account', verifyExistsAccountCPF, (request, response) => {
+    const { customer } = request;
+    // splice = recebe 2 parâmetros, basicamente é a remoção, remova 1 posição a partir do customer
+    customers.splice(customer, 1);
+
+    return response.status(200).json(customers);
+});
+
+// retornar o balanço
+app.get('/balance', verifyExistsAccountCPF, (request, response) => {
+    const { customer } = request;
+    const balance = getBalance(customer.statement);
+    return response.json(balance);
+});
+
 app.listen(3333, () => {
     console.log("Servidor rodando na posta 3333");
 });
