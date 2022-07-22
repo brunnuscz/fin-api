@@ -6,7 +6,9 @@ const app = express();
 
 app.use(express.json());
 
+// o array zero no reload
 const customers = []
+
 /**
  * cpf - string
  * name - string
@@ -17,12 +19,21 @@ const customers = []
 // criar uma conta
 app.post('/account', (request, response) => {
     const { cpf, name } = request.body;
-    const id = uuidv4(); // vai gerar o id
+    // o some é uma busca e ele retorna true ou false de acordo com a condição
+    // os três iguais vai compara o tipo da variavel e se o valor é igual
+    const customersAlreadyExists = customers.some(
+        (customers) => customers.cpf === cpf
+    );
+    // se for true isso quer dizer que cpf já existe
+    if(customersAlreadyExists){
+        return response.status(400).json({error: "Customer already exists!"});
+    }
+
     // criar um banco de dados "fake"
     customers.push({
         cpf,
         name,
-        id,
+        id: uuidv4(), // vai gerar o id,
         statement: []
     });
     return response.status(201).send(); // 201 - quando dado é criado
@@ -30,4 +41,4 @@ app.post('/account', (request, response) => {
 
 app.listen(3333, () => {
     console.log("Servidor rodando na posta 3333");
-})
+});
