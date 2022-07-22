@@ -34,6 +34,19 @@ function verifyExistsAccountCPF(request, response, next) { // o next define se v
 
     return next();
 }
+// função que faz o balanço da conta
+function getBalance(statement) {
+    // acumulador e objeto
+    const balance = statement.reduce((acc, operation) => {// vai pegar as informações de determinado valor e vai transformar em um valor somente
+        // se for crédito vai somar, e se for depito subtrair
+        if(operation.type === 'credit'){
+            return acc + operation.amount;
+        }else{
+            return acc - operation.amount;
+        }
+    }, 0); // vai iniciar ele em 0
+    return balance;
+}
 
 // criar uma conta
 app.post('/account', (request, response) => {
@@ -62,14 +75,14 @@ app.post('/account', (request, response) => {
 // o middleware pode ser passado como segundo parâmetro ou
 // app.use(verifyExistsAccountCPF); tem que ficar a cima dos que forem utilizar
 app.get('/statement', verifyExistsAccountCPF, (request, response) => {
-    const {customer} = request; // informação dentro do request
+    const { customer } = request; // informação dentro do request
     return response.json(customer.statement);
 });
 
 // inserindo um deposito
-app.post('/deposit', verifyExistsAccountCPF, (request, response)=>{
-    const {description, amount} = request.body; // descrição e quantia
-    const {customer} = request; // verificado se a conta é valida ou não
+app.post('/deposit', verifyExistsAccountCPF, (request, response) => {
+    const { description, amount } = request.body; // descrição e quantia
+    const { customer } = request; // verificado se a conta é valida ou não
     const statementOperation = {
         description,
         amount,
@@ -80,6 +93,27 @@ app.post('/deposit', verifyExistsAccountCPF, (request, response)=>{
     return response.status(201).send();
 });
 
+// fazendo saque
+app.post('/withdraw', verifyExistsAccountCPF, (request, response) => {
+    // não pode fazer saque se o saldo é insuficiente
+    const { amount } = request.body; // recebendo a quantia do saque
+    const { customer } = request;
+
+    const balance = getBalance(customer.statement);
+    if(balance < amount){
+        response.status(400).json({error: 'Insufficient funds!'});
+    }
+
+    const statementOperation = {
+        amount,
+        created_at: new Date(),
+        type: "debit"
+    }
+
+    customer.statement.push(statementOperation);
+    return response.status(201).send();
+
+});
 
 app.listen(3333, () => {
     console.log("Servidor rodando na posta 3333");
